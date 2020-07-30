@@ -1,0 +1,28 @@
+h1 {
+    text-align: center;
+}
+
+#game {
+    height: 900px;
+    width: 900px;
+    background: white;
+}
+
+#field {
+    height: 100%;
+    width: 100%;
+    align-items: center;
+    display: flex;
+    justify-content: center;
+}
+
+.block {
+    width: 300px;
+    height: 300px;
+    float: left;
+    border: 1px solid black;
+    box-sizing: border-box;
+    line-height: 300px;
+    text-align: center;
+    font-size: 250px;
+}
