@@ -1,10 +1,9 @@
 const express = require("express");
 const bodyParser = require('body-parser');
 const session = require('express-session');
-const UserHandler = require("./logic/user-handler");
-const GameHandler = require("./logic/game-handler");
-const Balancer = require("./logic/balancer");
+// const Balancer = require("./logic/balancer");
 const path = require('path');
+const GameServer = require("./logic/server-game");
 
 const app = express();
 
@@ -14,16 +13,15 @@ app.set('view engine', 'pug');
 app.use(express.static(path.join(__dirname, 'static')));
 
 
-var userHandler = new UserHandler();
-var gameHandler = new GameHandler();
-var ballancer = new Balancer(userHandler, gameHandler);
-ballancerCycle = () => {
-    setTimeout(function() {
-        ballancer.run();
-        ballancerCycle();
-    }, 1000);
-}
-ballancerCycle();
+var gameServer = new GameServer();
+// var ballancer = new Balancer(userHandler, gameHandler);
+// ballancerCycle = () => {
+//     setTimeout(function() {
+//         ballancer.run();
+//         ballancerCycle();
+//     }, 1000);
+// }
+// ballancerCycle();
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -36,10 +34,11 @@ app.use(
   );
 
 app.post("/login", (req, res) => {
-    let newUserName = req.body.username;
-    if (!userHandler.userIsExists(newUserName)) {
+    if (req.body.username) {
+        let newUserName = req.body.username;
         req.session.username = newUserName;
         console.log("Register user: ", newUserName);
+        gameServer.addPlayer(newUserName);
         res.redirect("/game");
     }
 });
@@ -76,12 +75,13 @@ server = app.listen(port, host, function() {
 });
 
 
-// const socket = require("socket.io")(server);
-var socketIO = socketIO.listen(server);
+
+const socketIO = require("socket.io")(server);
+// var socketIO = socketIO.listen(server);
+
 
 socketIO.on("connection", socket => {
-    socket.emit('news', { hello: 'world' });
-    console.log("New connection");
+    
 
    socket.on("block", (boxId) => {
         console.log(boxId);
@@ -91,3 +91,8 @@ socketIO.on("connection", socket => {
         console.log(hod);
    });
 });
+
+setTimeout(function() {
+    socketIO.emit("test", {});
+    console.log("send test");
+}, 10000);

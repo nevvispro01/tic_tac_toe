@@ -67,5 +67,8 @@ var allblock = document.getElementsByClassName('block');
 socket.on('news', function (data) {
     console.log(data.hello);
     });
+
+socket.on("test", function(data) {
+    console.log("receive test");
+})
     
-socket.emit("test", { data: "test"});
