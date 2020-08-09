@@ -4,16 +4,29 @@ const session = require('express-session');
 // const Balancer = require("./logic/balancer");
 const path = require('path');
 const GameServer = require("./logic/server-game");
+const Balancer = require("./logic/balancer");
+const cookieParser = require("cookie-parser");
+const { request } = require("http");
 
 const app = express();
 
 const host = '0.0.0.0';
 const port = 7000;
+
+var sessionMiddleware = session({
+    secret: "secret"
+});
+
 app.set('view engine', 'pug');
 app.use(express.static(path.join(__dirname, 'static')));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
+app.use(cookieParser());
+app.use(sessionMiddleware);
 
 var gameServer = new GameServer();
+var balancer = new Balancer();
 // var ballancer = new Balancer(userHandler, gameHandler);
 // ballancerCycle = () => {
 //     setTimeout(function() {
@@ -23,30 +36,38 @@ var gameServer = new GameServer();
 // }
 // ballancerCycle();
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use(
-    session({
-      secret: 'you secret key',
-      saveUninitialized: true
-    })
-  );
 
 app.post("/login", (req, res) => {
     if (req.body.username) {
         let newUserName = req.body.username;
         req.session.username = newUserName;
         console.log("Register user: ", newUserName);
-        gameServer.addPlayer(newUserName);
-        res.redirect("/game");
+        gameServer.addPlayer(req.sessionID, newUserName);
+        res.redirect("/play");
     }
 });
 
-app.get('/', (req, res) => {
-    if (req.session.username) {
+app.get("/play", (req, res) => {
+    let name = "";
+    if (gameServer.hasplayer(req.sessionID)) {
         console.log("Username: ", req.session.username);
-        req.redirect("/game");
+        name = req.session.username;
+    } else {
+        console.log("no login");
+        res.redirect("/");
+        return;
+    }
+    res.render("main-menu", {username: name});
+});
+
+app.post("/play", (req, res) => {
+        res.redirect("/game");
+});
+
+app.get('/', (req, res) => {
+    if (gameServer.hasplayer(req.sessionID)) {
+        req.redirect("/play");
         return;
     } else {
         console.log("no login");
@@ -57,7 +78,7 @@ app.get('/', (req, res) => {
 
 app.get("/game", (req, res) => {
     let name = "";
-    if (req.session.username) {
+    if (gameServer.hasplayer(req.sessionID)) {
         console.log("Username: ", req.session.username);
         name = req.session.username;
     } else {
@@ -65,7 +86,13 @@ app.get("/game", (req, res) => {
         res.redirect("/");
         return;
     }
-    res.render("game", {username: name});
+    if (balancer.run() === 0){
+        res.render("game", {username: name});
+    }else {
+        if (balancer.run() === 1){
+            res.render("game", {username1: name});
+        } 
+    }
 });
 
 
@@ -79,9 +106,13 @@ server = app.listen(port, host, function() {
 const socketIO = require("socket.io")(server);
 // var socketIO = socketIO.listen(server);
 
+socketIO.use(function(socket, next) {
+    sessionMiddleware(socket.request, socket.request.res, next);
+});
 
 socketIO.on("connection", socket => {
-    
+    socket.request.session;
+
 
    socket.on("block", (boxId) => {
         console.log(boxId);

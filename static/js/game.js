@@ -1,3 +1,5 @@
+const { render } = require("pug");
+
 var socket = io.connect("127.0.0.1:7000");
 var hod;
 
@@ -71,4 +73,3 @@ socket.on('news', function (data) {
 socket.on("test", function(data) {
     console.log("receive test");
 })
-    

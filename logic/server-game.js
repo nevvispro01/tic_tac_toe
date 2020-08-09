@@ -1,7 +1,12 @@
 class Player {
-    constructor(name) {
+    constructor(sessionID, name) {
+        this.sessionID = sessionID;
         this.name = name;
         this.socket = null;
+    }
+
+    linkSocket(socket) {
+        this.socket = socket;
     }
 }
 
@@ -24,21 +29,25 @@ class Game {
 
 class GameServer {
     constructor() {
-        this.players = [];
+        this.players = new Map();
         this.gameRooms = [];
     }
 
-    addPlayer(name) {
-        this.players.push(new Player(name));
+    addPlayer(sessionID, name) {
+        this.players.set(sessionID, new Player(sessionID, name));
     }
 
-    linkSocketToPlayer(name, socket) {
-        let result = players.find(function(item, index, array){
-            return item.name === name;
-        });
+    linkSocketToPlayer(sessionID, socket) {
+       if (this.players.has(sessionID)){
+           this.players.get(sessionID).linkSocket(socket);
+       }
 
         result.socket = socket;
     } 
+
+    hasplayer(sessionID) {
+        return this.players.has(sessionID);
+    }
 }
 
 module.exports = GameServer;
