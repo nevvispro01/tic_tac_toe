@@ -1,75 +1,132 @@
-const { render } = require("pug");
+function EmptyPage(){
+    document.getElementById('game').innerHTML = '';
+    document.getElementById('game').innerHTML += 
+    '<div id="loading"><div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div>&nbsp; Идет поиск соперника. Пожалуйста подождите...</div>';
+}
 
-var socket = io.connect("127.0.0.1:7000");
-var hod;
+function Button(player){
+    document.getElementById('game').innerHTML = '';
+    document.getElementById('game').innerHTML += '<h1 id="button">Игрок: ' + player + '</h1>';
+    document.getElementById('game').innerHTML += '<div id="play">';
+    document.getElementById('game').innerHTML += '<form action="/play" method="post">';
+    document.getElementById('game').innerHTML += '<button onclick="playerPlay()" type="button" class="btn btn-primary">Играть</button>';
+    document.getElementById('game').innerHTML += '</form>';
+    document.getElementById('game').innerHTML += '</div>';
+}
 
 function parseBoxId(idName) {
-    return parseInt(idName.replace("box_", ""));
+    return parseInt(idName.replace("block_", ""));
 }
 
-for (var i=0; i<9; i++) {
-    document.getElementById('game').innerHTML+='<div id="block_' + i + '" class="block"></div>';
+function GameMap(myname, opponent, bool) {
+        document.getElementById('game').innerHTML = '';
+        document.getElementById('myName').innerHTML = '';
+        document.getElementById('opponentName').innerHTML = '';
+        if (bool === true){
+            document.getElementById('myName').innerHTML += "<div id='gameProcess'><font color='blue'>" + myname + "</font></div>";;
+            document.getElementById('opponentName').innerHTML += "<div id='gameProcess'><font color='red'>" + opponent + "</font></div>";
+            // document.getElementById('game').innerHTML += '<div></div>';
+            // document.getElementById('game').innerHTML += '<div></div>';
+            // for (var i=0; i<9; i++) {
+            //     document.getElementById('game').innerHTML+='<div id="block_' + i + '" class="block"></div>';
+            // }
+            document.getElementById('game').innerHTML+='<div>X</div><div>0</div><div>X</div><div>X</div><div>0</div><div>X</div><div>X</div><div>0</div><div>X</div>';
+        }else{
+            document.getElementById('myName').innerHTML += "<div id='gameProcess'><font color='blue'>" + myname + "</font></div>";;
+            document.getElementById('opponentName').innerHTML += "<div id='gameProcess'><font color='red'>" + opponent + "</font></div>";
+            // document.getElementById('game').innerHTML += '<div></div>';
+            // document.getElementById('game').innerHTML += '<div></div>';
+            // for (var i=0; i<9; i++) {
+            //     document.getElementById('game').innerHTML+='<div id="block_' + i + '" class="block"></div>';
+            // }
+            document.getElementById('game').innerHTML+='<div>X</div><div>0</div><div>X</div><div>X</div><div>0</div><div>X</div><div>X</div><div>0</div><div>X</div>';
+        }
 }
 
 
-var allblock = document.getElementsByClassName('block');
-    hod = 0;
-    allblock[0].innerHTML = '';
-    allblock[1].innerHTML = '';
-    allblock[2].innerHTML = '';
-    allblock[3].innerHTML = '';
-    allblock[4].innerHTML = '';
-    allblock[5].innerHTML = '';
-    allblock[6].innerHTML = '';
-    allblock[7].innerHTML = '';
-    allblock[8].innerHTML = '';
-    document.getElementById('game').onclick = function(event) {
-        if (event.target.className == 'block') {
-            if (hod % 2 === 0){
-                boxId = parseBoxId(event.target.id);
-                console.log("Click on box ", boxId);
-                socket.emit("block", {blockNum : boxId});
-                socket.emit("move", {move : hod});
-                event.target.innerHTML = 'X';
-                
-            }
-            else {
-                event.target.innerHTML = '0';
-            }
-            hod++;
-            checkWinner()
-            if (hod === 9) alert('Ничья!!!');
+function playerPlay(){
+    socket.emit("checkbox", {})
+}
+
+function exit(){
+    document.getElementById('game').innerHTML = '';
+    socket.emit("exit", {});
+}
+
+function Winner(name){
+    // document.getElementById('game').innerHTML = ''; 
+    document.getElementById('game').innerHTML += '<div class="modal" tabindex="-1" role="dialog">';
+    document.getElementById('game').innerHTML += '<div class="modal-dialog">';
+    document.getElementById('game').innerHTML += '<div class="modal-content">';
+    document.getElementById('game').innerHTML += '<div class="modal-header">';
+    document.getElementById('game').innerHTML += '</div>';
+    document.getElementById('game').innerHTML += '<div class="modal-body">';
+    document.getElementById('game').innerHTML += '<p id="winner"> Игрок ' + name + ' Победил!!! </p>';
+    document.getElementById('game').innerHTML += '</div>';
+    document.getElementById('game').innerHTML += '<div class="modal-footer">';
+    document.getElementById('game').innerHTML += '<button onclick="exit()" type="button" class="btn btn-primary">Выход</button>';
+    document.getElementById('game').innerHTML += '</div>';
+    document.getElementById('game').innerHTML += '</div>';
+    document.getElementById('game').innerHTML += '</div>';
+    document.getElementById('game').innerHTML += '</div>';
+
+    // document.getElementById('game').innerHTML += "<h1 id='winner'> Игрок " + name + " Победил!!! </h1>";
+    // document.getElementById('game').innerHTML += '<button onclick="exit()">Выход</button>';
+}
+
+function Draw() {
+    document.getElementById('game').innerHTML += "<h1 id='winner'> Ничья!!! </h1>";
+    document.getElementById('game').innerHTML += '<button onclick="exit()">Выход</button>';
+}
+
+EmptyPage();
+
+var socket = io.connect("/");
+
+
+
+document.getElementById('game').onclick = function(event) {
+    if (event.target.className == 'block') {
+            boxId = parseBoxId(event.target.id);
+            socket.emit("block", {blockNum : boxId});
         }
+}
 
-        function checkWinner() {
-            //Победа крестиков
-            if (allblock[0].innerHTML=='X' && allblock[1].innerHTML=='X' && allblock[2].innerHTML=='X') alert('Победили крестики!!!');
-            if (allblock[3].innerHTML=='X' && allblock[4].innerHTML=='X' && allblock[5].innerHTML=='X') alert('Победили крестики!!!');
-            if (allblock[6].innerHTML=='X' && allblock[7].innerHTML=='X' && allblock[8].innerHTML=='X') alert('Победили крестики!!!');
-            if (allblock[0].innerHTML=='X' && allblock[3].innerHTML=='X' && allblock[6].innerHTML=='X') alert('Победили крестики!!!');
-            if (allblock[1].innerHTML=='X' && allblock[4].innerHTML=='X' && allblock[7].innerHTML=='X') alert('Победили крестики!!!');
-            if (allblock[2].innerHTML=='X' && allblock[5].innerHTML=='X' && allblock[8].innerHTML=='X') alert('Победили крестики!!!');
-            if (allblock[0].innerHTML=='X' && allblock[4].innerHTML=='X' && allblock[8].innerHTML=='X') alert('Победили крестики!!!');
-            if (allblock[6].innerHTML=='X' && allblock[4].innerHTML=='X' && allblock[2].innerHTML=='X') alert('Победили крестики!!!');
 
-            //Победа ноликов
-            if (allblock[0].innerHTML=='0' && allblock[1].innerHTML=='0' && allblock[2].innerHTML=='0') alert('Победили нолики!!!');
-            if (allblock[3].innerHTML=='0' && allblock[4].innerHTML=='0' && allblock[5].innerHTML=='0') alert('Победили нолики!!!');
-            if (allblock[6].innerHTML=='0' && allblock[7].innerHTML=='0' && allblock[8].innerHTML=='0') alert('Победили нолики!!!');
-            if (allblock[0].innerHTML=='0' && allblock[3].innerHTML=='0' && allblock[6].innerHTML=='0') alert('Победили нолики!!!');
-            if (allblock[1].innerHTML=='0' && allblock[4].innerHTML=='0' && allblock[7].innerHTML=='0') alert('Победили нолики!!!');
-            if (allblock[2].innerHTML=='0' && allblock[5].innerHTML=='0' && allblock[8].innerHTML=='0') alert('Победили нолики!!!');
-            if (allblock[0].innerHTML=='0' && allblock[4].innerHTML=='0' && allblock[8].innerHTML=='0') alert('Победили нолики!!!');
-            if (allblock[6].innerHTML=='0' && allblock[4].innerHTML=='0' && allblock[2].innerHTML=='0') alert('Победили нолики!!!');
-
+socket.on("map", (data) => {
+    for (var i=0; i<9; i++) {
+        if (data.map[i] === 1) {
+            let str = "block_" + i;
+            document.getElementById(str).innerHTML = 'X';
+        }else {
+            if (data.map[i] === 2) {
+                let str = "block_" + i;
+                document.getElementById(str).innerHTML = '0';
+            }
         }
-
     }
+});
+
+socket.on("Name", (data) => {
+    Button(data.userName);
+});
+
+socket.on("gameLaunch", (data) => {
+    GameMap(data.myname, data.opponent, data.hod);
+});
+
+socket.on("EmptyPage", () => {
+    EmptyPage();
+});
+
+socket.on("winner", (data) => {
+    Winner(data.Name);
+});
+
+socket.on("draw", () => {
+    Draw();
+});
 
 socket.on('news', function (data) {
     console.log(data.hello);
     });
-
-socket.on("test", function(data) {
-    console.log("receive test");
-})

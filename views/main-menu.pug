@@ -6,11 +6,15 @@
     <title>Document</title>
 </head>
 <body>
-    <h1>Игрок: [#{username}]</h1>
-    <div id="play">
-        <form action="/play" method="post">
+    <h1>Регистрация</h1>
+    <div id="login">
+        <form action="/login" method="post">
             <div>
-                <input type="submit" value="Играть"/>
+                <label>Username:</label>
+                <input type="text" name="username"/>
+            </div>
+            <div>
+                <input type="submit" value="Зарегистрироваться"/>
             </div>
         </form>
     </div>

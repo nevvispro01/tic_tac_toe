@@ -5,13 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <link rel="stylesheet", href="css/style.css">
-    //- <link rel="stylesheet" helf="css/bootstrap.min.css">
-    //- <script src="js/bootstrap.min.js" defer></script>
+    <link rel="stylesheet", href="css/bootstrap.min.css">
+    <script src="js/bootstrap.min.js" defer></script>
+    <script src="js/jquery.js" defer></script>
 </head>
 <body>
-    <h1>[#{username}]              Game               [#{username2}]</h1>
-    <div id="field">
-        <div id="game"></div>
+    <div id="myName"></div>
+    <div id="opponentName"></div>
+    <div class="field">
+        <div>
+            <div>
+                <div class="gameArea" id="game">
+                    <div>X</div><div>0</div><div>X</div><div>X</div><div>0</div><div>X</div><div>X</div><div>0</div><div>X</div>
+                </div>
+            </div>
+        </div>
     </div>
     <script src="js/socket.io.js"></script>
     <script src="js/game.js" ></script>

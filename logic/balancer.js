@@ -1,27 +1,24 @@
 const runCallbackTimeoutMsec = 1000;
+const GameServer = require("./server-game");
 
-let room = [];
-let number;
 
-room[0] = 0;
-room[1] = 0;
 
 class Balancer {
-    constructor() {
+    constructor(gameServer) {
+        this.gameServer = gameServer;
     }
 
-    run() {
-        if (room[0] === 0) {
-            room[0] = 1;
-            number = 0;
-            return number;
-        }else {
-            if (room[1] === 0) {
-                room[1] = 1;
-                number = 1;
-                return number;
+    tick(player) {
+        let id;
+        if ((player.playerPlay === true) && (player.room === null)) {
+            id = this.gameServer.findFreeRoom(); // здесь я получаю id комнаты в которую буду закидывать играков
+            if (this.gameServer.room.get(id).addPlayerToRoom(player) === true){ 
+                player.room = this.gameServer.room.get(id);
+                if ((this.gameServer.room.get(id).player1 != null) && (this.gameServer.room.get(id).player2 != null)) {
+                    this.gameServer.room.get(id).gameLaunch();
+                }
             }
-        }        
+        }
     }
 }
 

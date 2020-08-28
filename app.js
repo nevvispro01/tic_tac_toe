@@ -1,12 +1,12 @@
 const express = require("express");
 const bodyParser = require('body-parser');
 const session = require('express-session');
-// const Balancer = require("./logic/balancer");
 const path = require('path');
 const GameServer = require("./logic/server-game");
 const Balancer = require("./logic/balancer");
 const cookieParser = require("cookie-parser");
 const { request } = require("http");
+const { Socket } = require("dgram");
 
 const app = express();
 
@@ -25,12 +25,13 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(sessionMiddleware);
 
-var gameServer = new GameServer();
-var balancer = new Balancer();
-// var ballancer = new Balancer(userHandler, gameHandler);
+app.locals.gameServer = new GameServer();
+app.locals.balancer = new Balancer(app.locals.gameServer);
+
+
 // ballancerCycle = () => {
 //     setTimeout(function() {
-//         ballancer.run();
+//         app.locals.balancer.tick();
 //         ballancerCycle();
 //     }, 1000);
 // }
@@ -39,35 +40,37 @@ var balancer = new Balancer();
 
 
 app.post("/login", (req, res) => {
+    let gameServer = app.locals.gameServer;
     if (req.body.username) {
         let newUserName = req.body.username;
-        req.session.username = newUserName;
         console.log("Register user: ", newUserName);
         gameServer.addPlayer(req.sessionID, newUserName);
-        res.redirect("/play");
-    }
-});
-
-app.get("/play", (req, res) => {
-    let name = "";
-    if (gameServer.hasplayer(req.sessionID)) {
-        console.log("Username: ", req.session.username);
-        name = req.session.username;
-    } else {
-        console.log("no login");
-        res.redirect("/");
-        return;
-    }
-    res.render("main-menu", {username: name});
-});
-
-app.post("/play", (req, res) => {
         res.redirect("/game");
+    }
 });
+
+// app.get("/play", (req, res) => {
+//     let gameServer = app.locals.gameServer;
+//     let name = "";
+//     if (gameServer.hasplayer(req.sessionID)) {
+//         name = gameServer.getName(req.sessionID);
+//         console.log("Username: ", name);
+//     } else {
+//         console.log("no login");
+//         res.redirect("/");
+//         return;
+//     }
+//     res.render("main-menu", {username: name});
+// });
+
+// app.post("/play", (req, res) => {
+//         res.redirect("/game");
+// });
 
 app.get('/', (req, res) => {
+    let gameServer = app.locals.gameServer;
     if (gameServer.hasplayer(req.sessionID)) {
-        req.redirect("/play");
+        res.redirect("/play");
         return;
     } else {
         console.log("no login");
@@ -77,22 +80,17 @@ app.get('/', (req, res) => {
 
 
 app.get("/game", (req, res) => {
+    let gameServer = app.locals.gameServer;
     let name = "";
     if (gameServer.hasplayer(req.sessionID)) {
-        console.log("Username: ", req.session.username);
-        name = req.session.username;
+        name = gameServer.getName(req.sessionID);
+        console.log("Username: ", name);
     } else {
         console.log("no login");
         res.redirect("/");
         return;
     }
-    if (balancer.run() === 0){
         res.render("game", {username: name});
-    }else {
-        if (balancer.run() === 1){
-            res.render("game", {username1: name});
-        } 
-    }
 });
 
 
@@ -100,8 +98,6 @@ server = app.listen(port, host, function() {
     console.log(`Server listens http://${host}:${port}`);
 
 });
-
-
 
 const socketIO = require("socket.io")(server);
 // var socketIO = socketIO.listen(server);
@@ -113,15 +109,27 @@ socketIO.use(function(socket, next) {
 socketIO.on("connection", socket => {
     socket.request.session;
 
+    app.locals.gameServer.linkSocketToPlayer(socket.request.sessionID, socket);
 
-   socket.on("block", (boxId) => {
-        console.log(boxId);
+    socket.on("block", (data) => {
+        app.locals.gameServer.boxId(data.blockNum, socket.request.sessionID);
    });
-   
-   socket.on("move", (hod) => {
-        console.log(hod);
-   });
+
+    socket.on("checkbox", () => {
+        app.locals.gameServer.PlayerPlay(socket.request.sessionID);
+    });
+
+    socket.on("exit", () => {
+        app.locals.gameServer.exit(socket.request.sessionID);
+    });
+
+    // socket.on("balancer", (data) => {
+    //         socket.emit("EmptyPage", {});
+    //         app.locals.balancer.tick(data.player);
+    // });
 });
+
+   
 
 setTimeout(function() {
     socketIO.emit("test", {});
