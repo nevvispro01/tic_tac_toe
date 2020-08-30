@@ -23,9 +23,13 @@ class Player {
         this.socket.emit("gameLaunch", {myname : this.name, opponent : opponentName, hod : bool});
     }
 
-    playerTurn(gameMap, opponentName, bool) {
+    playerTurn(gameMap, opponentName, bool, blueOrRed) {
         this.socket.emit("gameLaunch", {myname : this.name, opponent : opponentName, hod : bool});
-        this.socket.emit("map", {map : gameMap});
+        if (blueOrRed === true){
+            this.socket.emit("mapBlue", {map : gameMap});
+        }else {
+            this.socket.emit("mapRed", {map : gameMap});
+        }
     }
 
     boxId2(boxId){
@@ -155,15 +159,15 @@ class Room {
             if (this.gameMap[boxId] === 0){
                 if (name === this.player1.name){
                     this.gameMap[boxId] = 1;
-                    this.player1.playerTurn(this.gameMap, this.player2.name, true);
-                    this.player2.playerTurn(this.gameMap, this.player1.name, false);
+                    this.player1.playerTurn(this.gameMap, this.player2.name, true, true);
+                    this.player2.playerTurn(this.gameMap, this.player1.name, false, false);
                     this.hod = this.player2.name;
                     this.checkWinner();
                 }else{
                     if (name === this.player2.name){
                         this.gameMap[boxId] = 2;
-                        this.player1.playerTurn(this.gameMap, this.player2.name, false);
-                        this.player2.playerTurn(this.gameMap, this.player1.name, true);
+                        this.player1.playerTurn(this.gameMap, this.player2.name, false, true);
+                        this.player2.playerTurn(this.gameMap, this.player1.name, true, false);
                         this.hod = this.player1.name;
                         this.checkWinner();
                     }

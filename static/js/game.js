@@ -7,11 +7,9 @@ function EmptyPage(){
 function Button(player){
     document.getElementById('game').innerHTML = '';
     document.getElementById('game').innerHTML += '<h1 id="button">Игрок: ' + player + '</h1>';
-    document.getElementById('game').innerHTML += '<div id="play">';
     document.getElementById('game').innerHTML += '<form action="/play" method="post">';
     document.getElementById('game').innerHTML += '<button onclick="playerPlay()" type="button" class="btn btn-primary">Играть</button>';
     document.getElementById('game').innerHTML += '</form>';
-    document.getElementById('game').innerHTML += '</div>';
 }
 
 function parseBoxId(idName) {
@@ -21,25 +19,19 @@ function parseBoxId(idName) {
 function GameMap(myname, opponent, bool) {
         document.getElementById('game').innerHTML = '';
         document.getElementById('myName').innerHTML = '';
-        document.getElementById('opponentName').innerHTML = '';
+        // document.getElementById('opponentName').innerHTML = '';
         if (bool === true){
-            document.getElementById('myName').innerHTML += "<div id='gameProcess'><font color='blue'>" + myname + "</font></div>";;
-            document.getElementById('opponentName').innerHTML += "<div id='gameProcess'><font color='red'>" + opponent + "</font></div>";
-            // document.getElementById('game').innerHTML += '<div></div>';
-            // document.getElementById('game').innerHTML += '<div></div>';
-            // for (var i=0; i<9; i++) {
-            //     document.getElementById('game').innerHTML+='<div id="block_' + i + '" class="block"></div>';
-            // }
-            document.getElementById('game').innerHTML+='<div>X</div><div>0</div><div>X</div><div>X</div><div>0</div><div>X</div><div>X</div><div>0</div><div>X</div>';
+            document.getElementById('myName').innerHTML += 
+            "<div id='gameProcess'><font color='blue'>" + myname + "</font>" + '  ' + "&mdash;" + '  ' + "<font color='red'>" + opponent + "</font></div>";
+            for (var i=0; i<9; i++) {
+                document.getElementById('game').innerHTML+='<div id="block_' + i + '" class="block"></div>';
+            }
         }else{
-            document.getElementById('myName').innerHTML += "<div id='gameProcess'><font color='blue'>" + myname + "</font></div>";;
-            document.getElementById('opponentName').innerHTML += "<div id='gameProcess'><font color='red'>" + opponent + "</font></div>";
-            // document.getElementById('game').innerHTML += '<div></div>';
-            // document.getElementById('game').innerHTML += '<div></div>';
-            // for (var i=0; i<9; i++) {
-            //     document.getElementById('game').innerHTML+='<div id="block_' + i + '" class="block"></div>';
-            // }
-            document.getElementById('game').innerHTML+='<div>X</div><div>0</div><div>X</div><div>X</div><div>0</div><div>X</div><div>X</div><div>0</div><div>X</div>';
+            document.getElementById('myName').innerHTML += 
+            "<div id='gameProcess'><font color='blue'>" + myname + "</font>" + '  ' + "&mdash;" + '  ' + "<font color='red'>" + opponent + "</font></div>";
+            for (var i=0; i<9; i++) {
+                document.getElementById('game').innerHTML+='<div id="block_' + i + '" class="block"></div>';
+            }
         }
 }
 
@@ -93,15 +85,29 @@ document.getElementById('game').onclick = function(event) {
 }
 
 
-socket.on("map", (data) => {
+socket.on("mapBlue", (data) => {
     for (var i=0; i<9; i++) {
         if (data.map[i] === 1) {
             let str = "block_" + i;
-            document.getElementById(str).innerHTML = 'X';
+            document.getElementById(str).innerHTML = '<img src="./img/CrossBlue.png" class="png">';
         }else {
             if (data.map[i] === 2) {
                 let str = "block_" + i;
-                document.getElementById(str).innerHTML = '0';
+                document.getElementById(str).innerHTML = '<img src="./img/ZeroRed.png" class="png">';
+            }
+        }
+    }
+});
+
+socket.on("mapRed", (data) => {
+    for (var i=0; i<9; i++) {
+        if (data.map[i] === 1) {
+            let str = "block_" + i;
+            document.getElementById(str).innerHTML = '<img src="./img/CrossRed.png" class="png">';
+        }else {
+            if (data.map[i] === 2) {
+                let str = "block_" + i;
+                document.getElementById(str).innerHTML = '<img src="./img/ZeroBlue.png" class="png">';
             }
         }
     }
