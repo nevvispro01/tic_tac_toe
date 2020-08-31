@@ -6,7 +6,7 @@ function EmptyPage(){
 
 function Button(player){
     document.getElementById('game').innerHTML = '';
-    document.getElementById('game').innerHTML += '<h1 >Игрок: ' + player + '</h1>'; //id="button"
+    document.getElementById('game').innerHTML += '<h1 >Игрок: ' + player + '</h1>';
     document.getElementById('game').innerHTML += '<form action="/play" method="post">';
     document.getElementById('game').innerHTML += '<button onclick="playerPlay()" type="button" class="btn btn-primary">Играть</button>';
     document.getElementById('game').innerHTML += '</form>';
