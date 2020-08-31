@@ -16,10 +16,30 @@
         <div class="field1">
             <div class="field2">
                 <div class="gameArea" id="game">
+                    <div id="hod"></div>
                 </div>
             </div>
         </div>
     </div>
+    
+    <div id="modal-wrapper" class="modal">
+  
+        <form class="modal-content animate" action="/action_page.php">
+              
+          <div class="imgcontainer">
+            <h1 style="text-align:center"></h1>
+            <div id="winnerName"></div>
+            <span class="badge badge-pill badge-dark"></span>
+          </div>
+      
+          <div class="container" id="exitGame">      
+          </div>
+          
+        </form>
+        
+    </div>
+
+
     <script src="js/socket.io.js"></script>
     <script src="js/game.js" ></script>
 </body>

@@ -112,6 +112,10 @@ socketIO.on("connection", socket => {
 
     app.locals.gameServer.linkSocketToPlayer(socket.request.sessionID, socket);
 
+    socket.on("disconnect", (reason) => {
+        app.locals.gameServer.disconnect(socket.request.sessionID);
+    });
+
     socket.on("block", (data) => {
         app.locals.gameServer.boxId(data.blockNum, socket.request.sessionID);
    });

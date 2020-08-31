@@ -22,13 +22,13 @@ function GameMap(myname, opponent, bool) {
         // document.getElementById('opponentName').innerHTML = '';
         if (bool === true){
             document.getElementById('myName').innerHTML += 
-            "<div id='gameProcess'><font color='blue'>" + myname + "</font>" + '  ' + "&mdash;" + '  ' + "<font color='red'>" + opponent + "</font></div>";
+            "<div id='gameProcess'><font color='blue'>" + myname + "</font>" + '  ' + "&mdash;" + '  ' + "<font color='red'><u>" + opponent + "</u>" + '   ' + "(Ход противника)</font></div>";
             for (var i=0; i<9; i++) {
                 document.getElementById('game').innerHTML+='<div id="block_' + i + '" class="block"></div>';
             }
         }else{
             document.getElementById('myName').innerHTML += 
-            "<div id='gameProcess'><font color='blue'>" + myname + "</font>" + '  ' + "&mdash;" + '  ' + "<font color='red'>" + opponent + "</font></div>";
+            "<div id='gameProcess'><font color='blue'>(Ваш ход)" + '   ' + "<u>" + myname + "</u></font>" + '  ' + "&mdash;" + '  ' + "<font color='red'>" + opponent + "</font></div>";
             for (var i=0; i<9; i++) {
                 document.getElementById('game').innerHTML+='<div id="block_' + i + '" class="block"></div>';
             }
@@ -40,35 +40,43 @@ function playerPlay(){
     socket.emit("checkbox", {})
 }
 
-function exit(){
+function exitInMainMenu(){
     document.getElementById('game').innerHTML = '';
+    document.getElementById('myName').innerHTML = '';
+    document.getElementById('modal-wrapper').style.display='none';
+    document.getElementById('winnerName').innerHTML = '';
+    document.getElementById('exitGame').innerHTML = '';
     socket.emit("exit", {});
 }
 
 function Winner(name){
-    // document.getElementById('game').innerHTML = ''; 
-    document.getElementById('game').innerHTML += '<div class="modal" tabindex="-1" role="dialog">';
-    document.getElementById('game').innerHTML += '<div class="modal-dialog">';
-    document.getElementById('game').innerHTML += '<div class="modal-content">';
-    document.getElementById('game').innerHTML += '<div class="modal-header">';
-    document.getElementById('game').innerHTML += '</div>';
-    document.getElementById('game').innerHTML += '<div class="modal-body">';
-    document.getElementById('game').innerHTML += '<p id="winner"> Игрок ' + name + ' Победил!!! </p>';
-    document.getElementById('game').innerHTML += '</div>';
-    document.getElementById('game').innerHTML += '<div class="modal-footer">';
-    document.getElementById('game').innerHTML += '<button onclick="exit()" type="button" class="btn btn-primary">Выход</button>';
-    document.getElementById('game').innerHTML += '</div>';
-    document.getElementById('game').innerHTML += '</div>';
-    document.getElementById('game').innerHTML += '</div>';
-    document.getElementById('game').innerHTML += '</div>';
+    document.getElementById('modal-wrapper').style.display='block';
+    document.getElementById('winnerName').innerHTML = '<span class="badge badge-pill badge-dark">Победи игрок: ' + name + '!!!</span>';
+    document.getElementById('exitGame').innerHTML = '<button onclick="exitInMainMenu()" type="button" class="btn btn-outline-danger">Выход</button>';
+
+    // document.getElementById('game').innerHTML += '<div class="modal" tabindex="-1" role="dialog">';
+    // document.getElementById('game').innerHTML += '<div class="modal-dialog">';
+    // document.getElementById('game').innerHTML += '<div class="modal-content">';
+    // document.getElementById('game').innerHTML += '<div class="modal-header">';
+    // document.getElementById('game').innerHTML += '</div>';
+    // document.getElementById('game').innerHTML += '<div class="modal-body">';
+    // document.getElementById('game').innerHTML += '<p id="winner"> Игрок ' + name + ' Победил!!! </p>';
+    // document.getElementById('game').innerHTML += '</div>';
+    // document.getElementById('game').innerHTML += '<div class="modal-footer">';
+    // document.getElementById('game').innerHTML += '<button onclick="exit()" type="button" class="btn btn-primary">Выход</button>';
+    // document.getElementById('game').innerHTML += '</div>';
+    // document.getElementById('game').innerHTML += '</div>';
+    // document.getElementById('game').innerHTML += '</div>';
+    // document.getElementById('game').innerHTML += '</div>';
 
     // document.getElementById('game').innerHTML += "<h1 id='winner'> Игрок " + name + " Победил!!! </h1>";
     // document.getElementById('game').innerHTML += '<button onclick="exit()">Выход</button>';
 }
 
 function Draw() {
-    document.getElementById('game').innerHTML += "<h1 id='winner'> Ничья!!! </h1>";
-    document.getElementById('game').innerHTML += '<button onclick="exit()">Выход</button>';
+    document.getElementById('modal-wrapper').style.display='block';
+    document.getElementById('winnerName').innerHTML = '<span class="badge badge-pill badge-dark">Ничья!!!</span>';
+    document.getElementById('exitGame').innerHTML ='<button onclick="exitInMainMenu()" type="button" class="btn btn-outline-danger">Выход</button>';
 }
 
 EmptyPage();

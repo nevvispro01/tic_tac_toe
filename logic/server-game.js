@@ -66,6 +66,10 @@ class GameServer {
         this.players.set(sessionID, new Player(sessionID, name));
     }
 
+    disconnect(sessionID){
+        this.players.delete(sessionID);
+    }
+
     linkSocketToPlayer(sessionID, socket) {
        if (this.players.has(sessionID)){
            this.players.get(sessionID).linkSocket(socket);
@@ -110,16 +114,30 @@ class GameServer {
     findFreeRoom() {
         let findId = false;
         this.id = 1;
-        while(findId === false){
-            if (this.room.has(this.id)){
-                if (this.room.get(this.id).player1 === null){
-                    return this.room.get(this.id).id;
-                }else {
-                    if (this.room.get(this.id).player2 === null) {
-                        return this.room.get(this.id).id;
-                    }
-                }
+        for (var room of this.room){
+            if (room.player1 === null){
+                return room.id;
             }else {
+                if (room.player2 === null) {
+                    return room.id;
+                }
+            }
+        }
+        // while(findId === false){
+        //     if (this.room.has(this.id)){
+        //         if (this.room.get(this.id).player1 === null){
+        //             return this.room.get(this.id).id;
+        //         }else {
+        //             if (this.room.get(this.id).player2 === null) {
+        //                 return this.room.get(this.id).id;
+        //             }
+        //         }
+        //     }
+        //     this.id++;
+        // }
+        // this.id = 1;
+        while(findId === false){
+            if (this.room.has(this.id) === false){
                 this.room.set(this.id, new Room(this.id));
                 this.room.get(this.id).creatureGameMap();
                 return this.room.get(this.id).id;
@@ -131,6 +149,10 @@ class GameServer {
 
     exit(sessionID) {
         this.players.get(sessionID).exit();
+        if (this.room.has(this.players.get(sessionID).room.id)){
+            this.room.get(this.players.get(sessionID).room.id).exitRoom();
+            this.room.delete(this.players.get(sessionID).room.id)
+        }
     }
 }
 
@@ -154,7 +176,6 @@ class Room {
     }
 
     gameProcess(boxId, name) {
-        this.numberOfMoves++;
         if (this.hod === name){
             if (this.gameMap[boxId] === 0){
                 if (name === this.player1.name){
@@ -162,6 +183,7 @@ class Room {
                     this.player1.playerTurn(this.gameMap, this.player2.name, true, true);
                     this.player2.playerTurn(this.gameMap, this.player1.name, false, false);
                     this.hod = this.player2.name;
+                    this.numberOfMoves = this.numberOfMoves + 1;
                     this.checkWinner();
                 }else{
                     if (name === this.player2.name){
@@ -169,6 +191,7 @@ class Room {
                         this.player1.playerTurn(this.gameMap, this.player2.name, false, true);
                         this.player2.playerTurn(this.gameMap, this.player1.name, true, false);
                         this.hod = this.player1.name;
+                        this.numberOfMoves = this.numberOfMoves + 1;
                         this.checkWinner();
                     }
                 }
@@ -179,7 +202,6 @@ class Room {
     addPlayerToRoom(player) {
         if (this.player1 === null){
             this.player1 = player;
-            this.hod = this.player1.name;
         }else {
             if (this.player2 === null){
                 this.player2 = player;
@@ -190,9 +212,25 @@ class Room {
         return true;
     }
 
+    randomInteger(min, max) {
+        // случайное число от min до (max+1)
+        let rand = min + Math.random() * (max + 1 - min);
+        return Math.floor(rand);
+      }
+
     gameLaunch() {
-        this.player1.gameLaunch(this.player2.name, false);
-        this.player2.gameLaunch(this.player1.name, true);
+        if (this.randomInteger(1, 2) === 1){
+            this.player1.gameLaunch(this.player2.name, false);
+            this.player2.gameLaunch(this.player1.name, true);
+            this.hod = this.player1.name;
+        }else{
+            let player = this.player1;
+            this.player1 = this.player2;
+            this.player2 = player;
+            this.player1.gameLaunch(this.player2.name, false);
+            this.player2.gameLaunch(this.player1.name, true);
+            this.hod = this.player1.name;
+        }
     }
 
     checkWinner(){
@@ -214,13 +252,14 @@ class Room {
         if (this.gameMap[0] === 2  && this.gameMap[4] === 2 && this.gameMap[8] === 2) this.player1.winner(this.player2.name), this.player2.winner(this.player2.name), this.exitRoom();
         if (this.gameMap[6] === 2  && this.gameMap[4] === 2 && this.gameMap[2] === 2) this.player1.winner(this.player2.name), this.player2.winner(this.player2.name), this.exitRoom();
 
-        if (this.numberOfMoves === 10) this.player1.draw(), this.player2.draw(), this.exitRoom();
+        if (this.numberOfMoves === 9) this.player1.draw(), this.player2.draw(), this.exitRoom();
     }
 
     exitRoom() {
         this.player1 = null;
         this.player2 = null;
         this.hod = null;
+        this.numberOfMoves = 0;
         this.creatureGameMap();
     }
 
