@@ -118,7 +118,7 @@ socketIO.on("connection", socket => {
 
     socket.on("block", (data) => {
         app.locals.gameServer.boxId(data.blockNum, socket.request.sessionID);
-   });
+    });
 
     socket.on("checkbox", () => {
         app.locals.gameServer.PlayerPlay(socket.request.sessionID);

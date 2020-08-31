@@ -6,7 +6,7 @@ function EmptyPage(){
 
 function Button(player){
     document.getElementById('game').innerHTML = '';
-    document.getElementById('game').innerHTML += '<h1 id="button">Игрок: ' + player + '</h1>';
+    document.getElementById('game').innerHTML += '<h1 >Игрок: ' + player + '</h1>'; //id="button"
     document.getElementById('game').innerHTML += '<form action="/play" method="post">';
     document.getElementById('game').innerHTML += '<button onclick="playerPlay()" type="button" class="btn btn-primary">Играть</button>';
     document.getElementById('game').innerHTML += '</form>';
@@ -49,28 +49,18 @@ function exitInMainMenu(){
     socket.emit("exit", {});
 }
 
-function Winner(name){
-    document.getElementById('modal-wrapper').style.display='block';
-    document.getElementById('winnerName').innerHTML = '<span class="badge badge-pill badge-dark">Победи игрок: ' + name + '!!!</span>';
-    document.getElementById('exitGame').innerHTML = '<button onclick="exitInMainMenu()" type="button" class="btn btn-outline-danger">Выход</button>';
+function Winner(myName, name){
+    if (myName === name){
+        document.getElementById('modal-wrapper').style.display='block';
+        document.getElementById('winnerName').innerHTML = "<h1><b><font color='blue'>Вы победили!!!</font></b></h1>";
+        document.getElementById('exitGame').innerHTML = '<button onclick="exitInMainMenu()" type="button" class="btn btn-outline-danger">Выход</button>';
+    }else{
+        document.getElementById('modal-wrapper').style.display='block';
+        document.getElementById('winnerName').innerHTML = "<h1><b id='winner'><font color='Red'>Вы проиграли!!!</font></b></h1>";
+        document.getElementById('winnerName').innerHTML += "<div>Победил игрок:<font color='Red'> " + name + "</font>!!!</div>";
+        document.getElementById('exitGame').innerHTML = '<button onclick="exitInMainMenu()" type="button" class="btn btn-outline-danger">Выход</button>';
+    }
 
-    // document.getElementById('game').innerHTML += '<div class="modal" tabindex="-1" role="dialog">';
-    // document.getElementById('game').innerHTML += '<div class="modal-dialog">';
-    // document.getElementById('game').innerHTML += '<div class="modal-content">';
-    // document.getElementById('game').innerHTML += '<div class="modal-header">';
-    // document.getElementById('game').innerHTML += '</div>';
-    // document.getElementById('game').innerHTML += '<div class="modal-body">';
-    // document.getElementById('game').innerHTML += '<p id="winner"> Игрок ' + name + ' Победил!!! </p>';
-    // document.getElementById('game').innerHTML += '</div>';
-    // document.getElementById('game').innerHTML += '<div class="modal-footer">';
-    // document.getElementById('game').innerHTML += '<button onclick="exit()" type="button" class="btn btn-primary">Выход</button>';
-    // document.getElementById('game').innerHTML += '</div>';
-    // document.getElementById('game').innerHTML += '</div>';
-    // document.getElementById('game').innerHTML += '</div>';
-    // document.getElementById('game').innerHTML += '</div>';
-
-    // document.getElementById('game').innerHTML += "<h1 id='winner'> Игрок " + name + " Победил!!! </h1>";
-    // document.getElementById('game').innerHTML += '<button onclick="exit()">Выход</button>';
 }
 
 function Draw() {
@@ -134,7 +124,7 @@ socket.on("EmptyPage", () => {
 });
 
 socket.on("winner", (data) => {
-    Winner(data.Name);
+    Winner(data.myName, data.Name);
 });
 
 socket.on("draw", () => {

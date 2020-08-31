@@ -37,7 +37,7 @@ class Player {
     }
 
     winner(name){
-        this.socket.emit("winner", {Name: name});
+        this.socket.emit("winner", {myName: this.name, Name: name});
     }
 
     draw() {
@@ -114,28 +114,23 @@ class GameServer {
     findFreeRoom() {
         let findId = false;
         this.id = 1;
-        for (var room of this.room){
-            if (room.player1 === null){
-                return room.id;
-            }else {
-                if (room.player2 === null) {
-                    return room.id;
+        while(findId === false){
+            if (this.room.has(this.id)){
+                if (this.room.get(this.id).player1 === null){
+                    return this.room.get(this.id).id;
+                }else {
+                    if (this.room.get(this.id).player2 === null) {
+                        return this.room.get(this.id).id;
+                    }
                 }
             }
+            if (this.id === 10){
+                findId = true;
+            }
+            this.id++;
         }
-        // while(findId === false){
-        //     if (this.room.has(this.id)){
-        //         if (this.room.get(this.id).player1 === null){
-        //             return this.room.get(this.id).id;
-        //         }else {
-        //             if (this.room.get(this.id).player2 === null) {
-        //                 return this.room.get(this.id).id;
-        //             }
-        //         }
-        //     }
-        //     this.id++;
-        // }
-        // this.id = 1;
+        findId = false;
+        this.id = 1;
         while(findId === false){
             if (this.room.has(this.id) === false){
                 this.room.set(this.id, new Room(this.id));
@@ -148,11 +143,10 @@ class GameServer {
     
 
     exit(sessionID) {
-        this.players.get(sessionID).exit();
         if (this.room.has(this.players.get(sessionID).room.id)){
-            this.room.get(this.players.get(sessionID).room.id).exitRoom();
             this.room.delete(this.players.get(sessionID).room.id)
         }
+        this.players.get(sessionID).exit();
     }
 }
 
@@ -234,33 +228,25 @@ class Room {
     }
 
     checkWinner(){
-        if (this.gameMap[0] === 1  && this.gameMap[1] === 1 && this.gameMap[2] === 1) this.player1.winner(this.player1.name), this.player2.winner(this.player1.name), this.exitRoom();
-        if (this.gameMap[3] === 1  && this.gameMap[4] === 1 && this.gameMap[5] === 1) this.player1.winner(this.player1.name), this.player2.winner(this.player1.name), this.exitRoom();
-        if (this.gameMap[6] === 1  && this.gameMap[7] === 1 && this.gameMap[8] === 1) this.player1.winner(this.player1.name), this.player2.winner(this.player1.name), this.exitRoom();
-        if (this.gameMap[0] === 1  && this.gameMap[3] === 1 && this.gameMap[6] === 1) this.player1.winner(this.player1.name), this.player2.winner(this.player1.name), this.exitRoom();
-        if (this.gameMap[1] === 1  && this.gameMap[4] === 1 && this.gameMap[7] === 1) this.player1.winner(this.player1.name), this.player2.winner(this.player1.name), this.exitRoom();
-        if (this.gameMap[2] === 1  && this.gameMap[5] === 1 && this.gameMap[8] === 1) this.player1.winner(this.player1.name), this.player2.winner(this.player1.name), this.exitRoom();
-        if (this.gameMap[0] === 1  && this.gameMap[4] === 1 && this.gameMap[8] === 1) this.player1.winner(this.player1.name), this.player2.winner(this.player1.name), this.exitRoom();
-        if (this.gameMap[6] === 1  && this.gameMap[4] === 1 && this.gameMap[2] === 1) this.player1.winner(this.player1.name), this.player2.winner(this.player1.name), this.exitRoom();
+        if (this.gameMap[0] === 1  && this.gameMap[1] === 1 && this.gameMap[2] === 1) this.player1.winner(this.player1.name), this.player2.winner(this.player1.name);
+        if (this.gameMap[3] === 1  && this.gameMap[4] === 1 && this.gameMap[5] === 1) this.player1.winner(this.player1.name), this.player2.winner(this.player1.name);
+        if (this.gameMap[6] === 1  && this.gameMap[7] === 1 && this.gameMap[8] === 1) this.player1.winner(this.player1.name), this.player2.winner(this.player1.name);
+        if (this.gameMap[0] === 1  && this.gameMap[3] === 1 && this.gameMap[6] === 1) this.player1.winner(this.player1.name), this.player2.winner(this.player1.name);
+        if (this.gameMap[1] === 1  && this.gameMap[4] === 1 && this.gameMap[7] === 1) this.player1.winner(this.player1.name), this.player2.winner(this.player1.name);
+        if (this.gameMap[2] === 1  && this.gameMap[5] === 1 && this.gameMap[8] === 1) this.player1.winner(this.player1.name), this.player2.winner(this.player1.name);
+        if (this.gameMap[0] === 1  && this.gameMap[4] === 1 && this.gameMap[8] === 1) this.player1.winner(this.player1.name), this.player2.winner(this.player1.name);
+        if (this.gameMap[6] === 1  && this.gameMap[4] === 1 && this.gameMap[2] === 1) this.player1.winner(this.player1.name), this.player2.winner(this.player1.name);
 
-        if (this.gameMap[0] === 2  && this.gameMap[1] === 2 && this.gameMap[2] === 2) this.player1.winner(this.player2.name), this.player2.winner(this.player2.name), this.exitRoom();
-        if (this.gameMap[3] === 2  && this.gameMap[4] === 2 && this.gameMap[5] === 2) this.player1.winner(this.player2.name), this.player2.winner(this.player2.name), this.exitRoom();
-        if (this.gameMap[6] === 2  && this.gameMap[7] === 2 && this.gameMap[8] === 2) this.player1.winner(this.player2.name), this.player2.winner(this.player2.name), this.exitRoom();
-        if (this.gameMap[0] === 2  && this.gameMap[3] === 2 && this.gameMap[6] === 2) this.player1.winner(this.player2.name), this.player2.winner(this.player2.name), this.exitRoom();
-        if (this.gameMap[1] === 2  && this.gameMap[4] === 2 && this.gameMap[7] === 2) this.player1.winner(this.player2.name), this.player2.winner(this.player2.name), this.exitRoom();
-        if (this.gameMap[2] === 2  && this.gameMap[5] === 2 && this.gameMap[8] === 2) this.player1.winner(this.player2.name), this.player2.winner(this.player2.name), this.exitRoom();
-        if (this.gameMap[0] === 2  && this.gameMap[4] === 2 && this.gameMap[8] === 2) this.player1.winner(this.player2.name), this.player2.winner(this.player2.name), this.exitRoom();
-        if (this.gameMap[6] === 2  && this.gameMap[4] === 2 && this.gameMap[2] === 2) this.player1.winner(this.player2.name), this.player2.winner(this.player2.name), this.exitRoom();
+        if (this.gameMap[0] === 2  && this.gameMap[1] === 2 && this.gameMap[2] === 2) this.player1.winner(this.player2.name), this.player2.winner(this.player2.name);
+        if (this.gameMap[3] === 2  && this.gameMap[4] === 2 && this.gameMap[5] === 2) this.player1.winner(this.player2.name), this.player2.winner(this.player2.name);
+        if (this.gameMap[6] === 2  && this.gameMap[7] === 2 && this.gameMap[8] === 2) this.player1.winner(this.player2.name), this.player2.winner(this.player2.name);
+        if (this.gameMap[0] === 2  && this.gameMap[3] === 2 && this.gameMap[6] === 2) this.player1.winner(this.player2.name), this.player2.winner(this.player2.name);
+        if (this.gameMap[1] === 2  && this.gameMap[4] === 2 && this.gameMap[7] === 2) this.player1.winner(this.player2.name), this.player2.winner(this.player2.name);
+        if (this.gameMap[2] === 2  && this.gameMap[5] === 2 && this.gameMap[8] === 2) this.player1.winner(this.player2.name), this.player2.winner(this.player2.name);
+        if (this.gameMap[0] === 2  && this.gameMap[4] === 2 && this.gameMap[8] === 2) this.player1.winner(this.player2.name), this.player2.winner(this.player2.name);
+        if (this.gameMap[6] === 2  && this.gameMap[4] === 2 && this.gameMap[2] === 2) this.player1.winner(this.player2.name), this.player2.winner(this.player2.name);
 
-        if (this.numberOfMoves === 9) this.player1.draw(), this.player2.draw(), this.exitRoom();
-    }
-
-    exitRoom() {
-        this.player1 = null;
-        this.player2 = null;
-        this.hod = null;
-        this.numberOfMoves = 0;
-        this.creatureGameMap();
+        if (this.numberOfMoves === 9) this.player1.draw(), this.player2.draw();
     }
 
 }
