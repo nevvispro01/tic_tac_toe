@@ -65,7 +65,7 @@ function Winner(myName, name){
 
 function Draw() {
     document.getElementById('modal-wrapper').style.display='block';
-    document.getElementById('winnerName').innerHTML = '<span class="badge badge-pill badge-dark">Ничья!!!</span>';
+    document.getElementById('winnerName').innerHTML = '<h1><b>Ничья!!!</b></h1>';
     document.getElementById('exitGame').innerHTML ='<button onclick="exitInMainMenu()" type="button" class="btn btn-outline-danger">Выход</button>';
 }
 
