@@ -1,5 +1,7 @@
 const Balancer = require("./balancer");
 
+const USER_RECONNECT_DELAY_MSEC = 30000;
+
 class Player {
     constructor(sessionID, name) {
         this.sessionID = sessionID;
@@ -7,10 +9,14 @@ class Player {
         this.socket = null;
         this.playerPlay = false;
         this.room = null;
+
+        this.isAlive = true;
+        this.needRemove = false;
     }
 
     linkSocket(socket) {
         this.socket = socket;
+        this.isAlive = true;
         this.socket.emit("Name", {userName : this.name});
     }
 
@@ -49,7 +55,28 @@ class Player {
         this.playerPlay = false;
         this.room = null;
     }
-    
+
+    setAlived(isAlive) {
+        this.isAlive = isAlive;
+    }
+
+    waitReconnect(session) {
+        if (this.needRemove) {
+            return;
+        }
+        this.setAlived(false);
+        setTimeout(() => {
+            if (!this.isAlive) {
+                session.destroy();
+                this.socket = null;
+                this.needRemove = true;
+            }
+        }, USER_RECONNECT_DELAY_MSEC);
+    }
+
+    recoverySession() {
+        // TODO: восстановление состояния сесси до отключения
+    }
 }
 
 
@@ -147,6 +174,19 @@ class GameServer {
             this.room.delete(this.players.get(sessionID).room.id)
         }
         this.players.get(sessionID).exit();
+    }
+
+    removeUnactivePlayers() {
+        idsForRemove = [];
+        for (player in this.players.values()) {
+            if (!player.isAlive) {
+                idsForRemove.push(player.sessionID);
+            }
+        }
+
+        for (id in idsForRemove) {
+            this.players.delete(id);
+        }
     }
 }
 

@@ -10,6 +10,7 @@ class Balancer {
 
     tick(player) {
         let id;
+        this.gameServer.removeUnactivePlayers();
         if ((player.playerPlay === true) && (player.room === null)) {
             id = this.gameServer.findFreeRoom(); // здесь я получаю id комнаты в которую буду закидывать играков
             if (this.gameServer.room.get(id).addPlayerToRoom(player) === true){ 
