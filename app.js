@@ -114,6 +114,7 @@ socketIO.on("connection", socket => {
 
     socket.on("disconnect", (reason) => {
         app.locals.gameServer.disconnect(socket.request.sessionID);
+        socket.request.session.destroy();
     });
 
     socket.on("block", (data) => {
