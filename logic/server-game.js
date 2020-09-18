@@ -29,11 +29,11 @@ class Player {
         this.socket.emit("gameLaunch", {myname : this.name, opponent : opponentName, hod : bool});
     }
 
-    playerTurn(gameMap, opponentName, bool, blueOrRed) {
-        this.socket.emit("gameLaunch", {myname : this.name, opponent : opponentName, hod : bool});
+    playerTurn(gameMap, opponentName, isActiveAction, blueOrRed) {
+        this.socket.emit("gameLaunch", {myname : this.name, opponent : opponentName, hod : isActiveAction});
         if (blueOrRed === true){
             this.socket.emit("mapBlue", {map : gameMap});
-        }else {
+        } else {
             this.socket.emit("mapRed", {map : gameMap});
         }
     }
@@ -75,7 +75,9 @@ class Player {
     }
 
     recoverySession() {
-        // TODO: восстановление состояния сесси до отключения
+        if (this.room) {
+            this.room.renderMap(this.name);
+        }
     }
 }
 
@@ -139,9 +141,9 @@ class GameServer {
     }
 
     findFreeRoom() {
-        let findId = false;
+        let isFoundId = false;
         this.id = 1;
-        while(findId === false){
+        while(isFoundId === false){
             if (this.room.has(this.id)){
                 if (this.room.get(this.id).player1 === null){
                     return this.room.get(this.id).id;
@@ -152,13 +154,13 @@ class GameServer {
                 }
             }
             if (this.id === 10){
-                findId = true;
+                isFoundId = true;
             }
             this.id++;
         }
-        findId = false;
+        isFoundId = false;
         this.id = 1;
-        while(findId === false){
+        while(isFoundId === false){
             if (this.room.has(this.id) === false){
                 this.room.set(this.id, new Room(this.id));
                 this.room.get(this.id).creatureGameMap();
@@ -177,7 +179,7 @@ class GameServer {
     }
 
     removeUnactivePlayers() {
-        idsForRemove = [];
+        let idsForRemove = [];
         for (player in this.players.values()) {
             if (!player.isAlive) {
                 idsForRemove.push(player.sessionID);
@@ -230,6 +232,16 @@ class Room {
                     }
                 }
             }
+        }
+    }
+
+    renderMap(playerName) {
+        if (playerName === this.player1.name) {
+            this.player1.playerTurn(this.gameMap, this.player2.name, this.hod != this.player1.name, true);
+            this.checkWinner();
+        } else {
+            this.player2.playerTurn(this.gameMap, this.player1.name, this.hod != this.player2.name, false);
+            this.checkWinner();
         }
     }
 
