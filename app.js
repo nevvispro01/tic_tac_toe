@@ -29,15 +29,13 @@ app.use(sessionMiddleware);
 app.locals.gameServer = new GameServer();
 app.locals.balancer = new Balancer(app.locals.gameServer);
 
-
-// ballancerCycle = () => {
-//     setTimeout(function() {
-//         app.locals.balancer.tick();
-//         ballancerCycle();
-//     }, 1000);
-// }
-// ballancerCycle();
-
+cleanPlayersList = () => {
+    setTimeout(function() {
+        app.locals.gameServer.removeUnactivePlayers();
+        cleanPlayersList();
+    }, 1000);
+}
+cleanPlayersList();
 
 
 app.post("/login", (req, res) => {
@@ -144,7 +142,7 @@ socketIO.on("connection", socket => {
     // });
 });
 
-   
+
 
 setTimeout(function() {
     socketIO.emit("test", {});

@@ -43,11 +43,15 @@ class Player {
     }
 
     winner(name){
-        this.socket.emit("winner", {myName: this.name, Name: name});
+        if (this.socket) {
+            this.socket.emit("winner", {myName: this.name, Name: name});
+        }
     }
 
     draw() {
-        this.socket.emit("draw", {});
+        if (this.socket) {
+            this.socket.emit("draw", {});
+        }
     }
 
     exit() {
@@ -70,6 +74,9 @@ class Player {
                 session.destroy();
                 this.socket = null;
                 this.needRemove = true;
+                if (this.room) {
+                    this.room.forceWin(this.name);
+                }
             }
         }, USER_RECONNECT_DELAY_MSEC);
     }
@@ -180,13 +187,13 @@ class GameServer {
 
     removeUnactivePlayers() {
         let idsForRemove = [];
-        for (player in this.players.values()) {
+        for (let player of this.players.values()) {
             if (!player.isAlive) {
                 idsForRemove.push(player.sessionID);
             }
         }
 
-        for (id in idsForRemove) {
+        for (let id of idsForRemove) {
             this.players.delete(id);
         }
     }
@@ -301,6 +308,15 @@ class Room {
         if (this.numberOfMoves === 9) this.player1.draw(), this.player2.draw();
     }
 
+    forceWin(loserName) {
+        let winnerName = (loserName === this.player1.name) ? this.player2.name : this.player1.name;
+        if (this.player1) {
+            this.player1.winner(winnerName);
+        }
+        if (this.player2) {
+            this.player2.winner(winnerName);
+        }
+    }
 }
 
 module.exports = GameServer;
