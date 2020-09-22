@@ -48,24 +48,6 @@ app.post("/login", (req, res) => {
     }
 });
 
-// app.get("/play", (req, res) => {
-//     let gameServer = app.locals.gameServer;
-//     let name = "";
-//     if (gameServer.hasplayer(req.sessionID)) {
-//         name = gameServer.getName(req.sessionID);
-//         console.log("Username: ", name);
-//     } else {
-//         console.log("no login");
-//         res.redirect("/");
-//         return;
-//     }
-//     res.render("main-menu", {username: name});
-// });
-
-// app.post("/play", (req, res) => {
-//         res.redirect("/game");
-// });
-
 app.get('/', (req, res) => {
     let gameServer = app.locals.gameServer;
     if (gameServer.hasplayer(req.sessionID)) {
@@ -136,10 +118,6 @@ socketIO.on("connection", socket => {
         app.locals.gameServer.exit(socket.request.sessionID);
     });
 
-    // socket.on("balancer", (data) => {
-    //         socket.emit("EmptyPage", {});
-    //         app.locals.balancer.tick(data.player);
-    // });
 });
 
 

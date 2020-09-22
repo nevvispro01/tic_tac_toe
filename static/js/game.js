@@ -19,7 +19,6 @@ function parseBoxId(idName) {
 function GameMap(myname, opponent, bool) {
         document.getElementById('game').innerHTML = '';
         document.getElementById('myName').innerHTML = '';
-        // document.getElementById('opponentName').innerHTML = '';
         if (bool === true){
             document.getElementById('myName').innerHTML += 
             "<div id='gameProcess'><font color='blue'>" + myname + "</font>" + '  ' + "&mdash;" + '  ' + "<font color='red'><u>" + opponent + "</u>" + '   ' + "(Ход противника)</font></div>";
