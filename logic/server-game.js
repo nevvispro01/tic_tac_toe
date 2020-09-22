@@ -1,5 +1,7 @@
 const Balancer = require("./balancer");
 
+const USER_RECONNECT_DELAY_MSEC = 30000;
+
 class Player {
     constructor(sessionID, name) {
         this.sessionID = sessionID;
@@ -7,10 +9,14 @@ class Player {
         this.socket = null;
         this.playerPlay = false;
         this.room = null;
+
+        this.isAlive = true;
+        this.needRemove = false;
     }
 
     linkSocket(socket) {
         this.socket = socket;
+        this.isAlive = true;
         this.socket.emit("Name", {userName : this.name});
     }
 
@@ -23,11 +29,11 @@ class Player {
         this.socket.emit("gameLaunch", {myname : this.name, opponent : opponentName, hod : bool});
     }
 
-    playerTurn(gameMap, opponentName, bool, blueOrRed) {
-        this.socket.emit("gameLaunch", {myname : this.name, opponent : opponentName, hod : bool});
+    playerTurn(gameMap, opponentName, isActiveAction, blueOrRed) {
+        this.socket.emit("gameLaunch", {myname : this.name, opponent : opponentName, hod : isActiveAction});
         if (blueOrRed === true){
             this.socket.emit("mapBlue", {map : gameMap});
-        }else {
+        } else {
             this.socket.emit("mapRed", {map : gameMap});
         }
     }
@@ -37,11 +43,15 @@ class Player {
     }
 
     winner(name){
-        this.socket.emit("winner", {myName: this.name, Name: name});
+        if (this.socket) {
+            this.socket.emit("winner", {myName: this.name, Name: name});
+        }
     }
 
     draw() {
-        this.socket.emit("draw", {});
+        if (this.socket) {
+            this.socket.emit("draw", {});
+        }
     }
 
     exit() {
@@ -49,7 +59,33 @@ class Player {
         this.playerPlay = false;
         this.room = null;
     }
-    
+
+    setAlived(isAlive) {
+        this.isAlive = isAlive;
+    }
+
+    waitReconnect(session) {
+        if (this.needRemove) {
+            return;
+        }
+        this.setAlived(false);
+        setTimeout(() => {
+            if (!this.isAlive) {
+                session.destroy();
+                this.socket = null;
+                this.needRemove = true;
+                if (this.room) {
+                    this.room.forceWin(this.name);
+                }
+            }
+        }, USER_RECONNECT_DELAY_MSEC);
+    }
+
+    recoverySession() {
+        if (this.room) {
+            this.room.renderMap(this.name);
+        }
+    }
 }
 
 
@@ -112,9 +148,9 @@ class GameServer {
     }
 
     findFreeRoom() {
-        let findId = false;
+        let isFoundId = false;
         this.id = 1;
-        while(findId === false){
+        while(isFoundId === false){
             if (this.room.has(this.id)){
                 if (this.room.get(this.id).player1 === null){
                     return this.room.get(this.id).id;
@@ -125,13 +161,13 @@ class GameServer {
                 }
             }
             if (this.id === 10){
-                findId = true;
+                isFoundId = true;
             }
             this.id++;
         }
-        findId = false;
+        isFoundId = false;
         this.id = 1;
-        while(findId === false){
+        while(isFoundId === false){
             if (this.room.has(this.id) === false){
                 this.room.set(this.id, new Room(this.id));
                 this.room.get(this.id).creatureGameMap();
@@ -147,6 +183,19 @@ class GameServer {
             this.room.delete(this.players.get(sessionID).room.id)
         }
         this.players.get(sessionID).exit();
+    }
+
+    removeUnactivePlayers() {
+        let idsForRemove = [];
+        for (let player of this.players.values()) {
+            if (!player.isAlive) {
+                idsForRemove.push(player.sessionID);
+            }
+        }
+
+        for (let id of idsForRemove) {
+            this.players.delete(id);
+        }
     }
 }
 
@@ -190,6 +239,16 @@ class Room {
                     }
                 }
             }
+        }
+    }
+
+    renderMap(playerName) {
+        if (playerName === this.player1.name) {
+            this.player1.playerTurn(this.gameMap, this.player2.name, this.hod != this.player1.name, true);
+            this.checkWinner();
+        } else {
+            this.player2.playerTurn(this.gameMap, this.player1.name, this.hod != this.player2.name, false);
+            this.checkWinner();
         }
     }
 
@@ -249,6 +308,15 @@ class Room {
         if (this.numberOfMoves === 9) this.player1.draw(), this.player2.draw();
     }
 
+    forceWin(loserName) {
+        let winnerName = (loserName === this.player1.name) ? this.player2.name : this.player1.name;
+        if (this.player1) {
+            this.player1.winner(winnerName);
+        }
+        if (this.player2) {
+            this.player2.winner(winnerName);
+        }
+    }
 }
 
 module.exports = GameServer;

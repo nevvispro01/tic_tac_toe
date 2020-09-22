@@ -29,15 +29,13 @@ app.use(sessionMiddleware);
 app.locals.gameServer = new GameServer();
 app.locals.balancer = new Balancer(app.locals.gameServer);
 
-
-// ballancerCycle = () => {
-//     setTimeout(function() {
-//         app.locals.balancer.tick();
-//         ballancerCycle();
-//     }, 1000);
-// }
-// ballancerCycle();
-
+cleanPlayersList = () => {
+    setTimeout(function() {
+        app.locals.gameServer.removeUnactivePlayers();
+        cleanPlayersList();
+    }, 1000);
+}
+cleanPlayersList();
 
 
 app.post("/login", (req, res) => {
@@ -110,10 +108,20 @@ socketIO.use(function(socket, next) {
 socketIO.on("connection", socket => {
     socket.request.session;
 
-    app.locals.gameServer.linkSocketToPlayer(socket.request.sessionID, socket);
+    if (app.locals.gameServer.hasplayer(socket.request.sessionID)
+        && !app.locals.gameServer.players.get(socket.request.sessionID).isAlive) {
+        app.locals.gameServer.linkSocketToPlayer(socket.request.sessionID, socket);
+        app.locals.gameServer.players.get(socket.request.sessionID).recoverySession();
+    } else {
+        app.locals.gameServer.linkSocketToPlayer(socket.request.sessionID, socket);
+    }
 
     socket.on("disconnect", (reason) => {
-        app.locals.gameServer.disconnect(socket.request.sessionID);
+        if (app.locals.gameServer.hasplayer(socket.request.sessionID)) {
+            app.locals.gameServer.players.get(socket.request.sessionID).waitReconnect(socket.request.session);
+        }
+        // app.locals.gameServer.disconnect(socket.request.sessionID);
+        // socket.request.session.destroy();
     });
 
     socket.on("block", (data) => {
@@ -134,7 +142,7 @@ socketIO.on("connection", socket => {
     // });
 });
 
-   
+
 
 setTimeout(function() {
     socketIO.emit("test", {});
