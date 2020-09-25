@@ -1,7 +1,7 @@
-function EmptyPage(){
+function EmptyPage(message){
     document.getElementById('game').innerHTML = '';
     document.getElementById('game').innerHTML += 
-    '<div id="loading"><div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div>&nbsp; Идет поиск соперника. Пожалуйста подождите...</div>';
+    '<div id="loading"><div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div>&nbsp;' + message + '</div>';
 }
 
 function Button(player){
@@ -68,7 +68,7 @@ function Draw() {
     document.getElementById('exitGame').innerHTML ='<button onclick="exitInMainMenu()" type="button" class="btn btn-outline-danger">Выход</button>';
 }
 
-EmptyPage();
+EmptyPage('');
 
 var socket = io.connect("/");
 
@@ -118,8 +118,8 @@ socket.on("gameLaunch", (data) => {
     GameMap(data.myname, data.opponent, data.hod);
 });
 
-socket.on("EmptyPage", () => {
-    EmptyPage();
+socket.on("EmptyPage", (data) => {
+    EmptyPage(data.message);
 });
 
 socket.on("winner", (data) => {

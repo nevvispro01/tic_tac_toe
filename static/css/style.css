@@ -105,3 +105,9 @@ h1 {
     text-align: center;
     font-size: 35px;
 }
+
+#inline {
+    width: 120px; /* Ширина */
+    margin: 0 5px 15px 0; /* Отступы */
+    display: inline-block;
+}

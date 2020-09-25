@@ -37,6 +37,16 @@ cleanPlayersList = () => {
 }
 cleanPlayersList();
 
+app.get('/', (req, res) => {
+    let gameServer = app.locals.gameServer;
+    if (gameServer.hasplayer(req.sessionID)) {
+        res.redirect("/play");
+        return;
+    } else {
+        console.log("no login");
+    }
+    res.render("index");
+});
 
 app.post("/login", (req, res) => {
     let gameServer = app.locals.gameServer;
@@ -48,15 +58,26 @@ app.post("/login", (req, res) => {
     }
 });
 
-app.get('/', (req, res) => {
-    let gameServer = app.locals.gameServer;
-    if (gameServer.hasplayer(req.sessionID)) {
-        res.redirect("/play");
-        return;
-    } else {
-        console.log("no login");
+app.post("/transition_to_registration", (req, res) => {
+    res.redirect("/registration");
+});
+
+app.post("/register", (req, res) => {
+    if (req.body.password1 == req.body.password2){
+        let gameServer = app.locals.gameServer;
+        if (req.body.username) {
+            let newUserName = req.body.username;
+            console.log("Register user: ", newUserName);
+            gameServer.addPlayer(req.sessionID, newUserName);
+            res.redirect("/game");
+        }
     }
-    res.render("index");
+
+});
+
+app.get("/registration", (req, res) => {
+    res.render("registration");
+
 });
 
 

@@ -2,7 +2,7 @@ const Balancer = require("./balancer");
 
 const USER_RECONNECT_DELAY_MSEC = 30000;
 
-class Player {
+class OnlinePlayer {
     constructor(sessionID, name) {
         this.sessionID = sessionID;
         this.name = name;
@@ -22,7 +22,7 @@ class Player {
 
     playerPlay2() {
         this.playerPlay = true;
-        this.socket.emit("EmptyPage", {});
+        this.socket.emit("EmptyPage", {message : " Идет поиск соперника. Пожалуйста подождите..."});
     }
 
     gameLaunch(opponentName, bool) {
@@ -99,7 +99,7 @@ class GameServer {
     }
 
     addPlayer(sessionID, name) {
-        this.players.set(sessionID, new Player(sessionID, name));
+        this.players.set(sessionID, new OnlinePlayer(sessionID, name));
     }
 
     disconnect(sessionID){
