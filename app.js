@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const session = require('express-session');
 const path = require('path');
 const GameServer = require("./logic/server-game");
+const DatabaseWorker = require("./logic/dataBasa");
 const Balancer = require("./logic/balancer");
 const cookieParser = require("cookie-parser");
 const { request } = require("http");
@@ -12,6 +13,7 @@ const app = express();
 
 const host = '0.0.0.0';
 const port = 7000;
+const url = "mongodb://localhost:27017/";
 
 var sessionMiddleware = session({
     secret: "secret"
@@ -27,6 +29,7 @@ app.use(cookieParser());
 app.use(sessionMiddleware);
 
 app.locals.gameServer = new GameServer();
+app.locals.dbWorker = new DatabaseWorker(url, app.locals.gameServer);
 app.locals.balancer = new Balancer(app.locals.gameServer);
 
 cleanPlayersList = () => {
@@ -50,12 +53,41 @@ app.get('/', (req, res) => {
 
 app.post("/login", (req, res) => {
     let gameServer = app.locals.gameServer;
-    if (req.body.username) {
-        let newUserName = req.body.username;
-        console.log("Register user: ", newUserName);
-        gameServer.addPlayer(req.sessionID, newUserName);
-        res.redirect("/game");
-    }
+    let dbWorker = app.locals.dbWorker;
+
+    let promise = new Promise((resolve, reject) => {
+
+       dbWorker.login_check(req, res, resolve, reject);
+    });
+
+    promise.then(
+        result => {
+            let newUserName = req.body.username;
+            console.log("Register user: ", newUserName);
+            gameServer.addPlayer(req.sessionID, newUserName);
+            res.redirect("/game");
+        },
+        error => {
+            res.render("index");
+        }
+    );
+
+    // if (dbWorker.login_check(req.body.username, req.body.password)){
+    //     let newUserName = req.body.username;
+    //     console.log("Register user: ", newUserName);
+    //     gameServer.addPlayer(req.sessionID, newUserName);
+    //     res.redirect("/game");
+    // } else {
+    //     res.render("index");
+    // }
+
+
+    // if (req.body.username) {
+    //     let newUserName = req.body.username;
+    //     console.log("Register user: ", newUserName);
+    //     gameServer.addPlayer(req.sessionID, newUserName);
+    //     res.redirect("/game");
+    // }
 });
 
 app.post("/transition_to_registration", (req, res) => {
@@ -65,6 +97,8 @@ app.post("/transition_to_registration", (req, res) => {
 app.post("/register", (req, res) => {
     if (req.body.password1 == req.body.password2){
         let gameServer = app.locals.gameServer;
+        let dbWorker = app.locals.dbWorker;
+        dbWorker.player_registration(req.body.username, req.body.password1);
         if (req.body.username) {
             let newUserName = req.body.username;
             console.log("Register user: ", newUserName);
