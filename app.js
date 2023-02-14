@@ -10,6 +10,8 @@ const { Socket } = require("dgram");
 
 const app = express();
 
+
+const USER_RECONNECT_DELAY_MSEC = 30000;
 const host = '0.0.0.0';
 const port = 7000;
 
@@ -50,11 +52,15 @@ app.get('/', (req, res) => {
 
 app.post("/login", (req, res) => {
     let gameServer = app.locals.gameServer;
-    if (req.body.username) {
-        let newUserName = req.body.username;
-        console.log("Register user: ", newUserName);
-        gameServer.addPlayer(req.sessionID, newUserName);
-        res.redirect("/game");
+    if (req.body.username && req.body.password) {
+        let name = req.body.username;
+        let passwd = req.body.password;
+        if (gameServer.existenceCheckAccount(name, passwd)){
+            console.log("Login user: ", name);
+            gameServer.addPlayer(req.sessionID, name);
+            res.redirect("/game");
+        }
+        
     }
 });
 
@@ -65,14 +71,17 @@ app.post("/transition_to_registration", (req, res) => {
 app.post("/register", (req, res) => {
     if (req.body.password1 == req.body.password2){
         let gameServer = app.locals.gameServer;
+        let newUserName = req.body.username;
+        let passwd = req.body.password1;
         if (req.body.username) {
-            let newUserName = req.body.username;
-            console.log("Register user: ", newUserName);
-            gameServer.addPlayer(req.sessionID, newUserName);
-            res.redirect("/game");
+            if (gameServer.registerAccount(newUserName, passwd)){
+                console.log("Register user: ", newUserName);
+                gameServer.addPlayer(req.sessionID, newUserName);
+                res.redirect("/game");
+            }
+            
         }
     }
-
 });
 
 app.get("/registration", (req, res) => {
@@ -123,8 +132,12 @@ socketIO.on("connection", socket => {
         if (app.locals.gameServer.hasplayer(socket.request.sessionID)) {
             app.locals.gameServer.players.get(socket.request.sessionID).waitReconnect(socket.request.session);
         }
-        // app.locals.gameServer.disconnect(socket.request.sessionID);
-        // socket.request.session.destroy();
+        setTimeout(() => {
+            console.log("disconnect");
+            app.locals.gameServer.disconnect(socket.request.sessionID);
+            // socket.request.session.destroy();
+        }, USER_RECONNECT_DELAY_MSEC);
+        
     });
 
     socket.on("block", (data) => {
@@ -135,8 +148,8 @@ socketIO.on("connection", socket => {
         app.locals.gameServer.PlayerPlay(socket.request.sessionID);
     });
 
-    socket.on("exit", () => {
-        app.locals.gameServer.exit(socket.request.sessionID);
+    socket.on("exit", (data) => {
+        app.locals.gameServer.exit(socket.request.sessionID, data.userState);
     });
 
 });

@@ -1,9 +1,11 @@
+const e = require("express");
 const Balancer = require("./balancer");
+
 
 const USER_RECONNECT_DELAY_MSEC = 30000;
 
 class OnlinePlayer {
-    constructor(sessionID, name) {
+    constructor(sessionID, name, rating) {
         this.sessionID = sessionID;
         this.name = name;
         this.socket = null;
@@ -12,12 +14,13 @@ class OnlinePlayer {
 
         this.isAlive = true;
         this.needRemove = false;
+        this.rating = rating;
     }
 
     linkSocket(socket) {
         this.socket = socket;
         this.isAlive = true;
-        this.socket.emit("Name", {userName : this.name});
+        this.socket.emit("Name", {userName : this.name, userRating : this.rating});
     }
 
     playerPlay2() {
@@ -46,6 +49,7 @@ class OnlinePlayer {
         if (this.socket) {
             this.socket.emit("winner", {myName: this.name, Name: name});
         }
+
     }
 
     draw() {
@@ -54,8 +58,9 @@ class OnlinePlayer {
         }
     }
 
-    exit() {
-        this.socket.emit("Name", {userName : this.name});
+    exit(rating) {
+        this.rating = rating;
+        this.socket.emit("Name", {userName : this.name, userRating : this.rating});
         this.playerPlay = false;
         this.room = null;
     }
@@ -65,12 +70,14 @@ class OnlinePlayer {
     }
 
     waitReconnect(session) {
+        console.log("wait");
         if (this.needRemove) {
             return;
         }
         this.setAlived(false);
         setTimeout(() => {
             if (!this.isAlive) {
+                console.log("NOT Alive");
                 session.destroy();
                 this.socket = null;
                 this.needRemove = true;
@@ -88,18 +95,76 @@ class OnlinePlayer {
     }
 }
 
+class Account {
+    constructor(name, passwd){
+        this.userName = name;
+        this.password = passwd;
+        this.rating = 0;
+    }
 
+    checkPasswd(passwd){
+        if (passwd == this.password){
+            return true;
+        }
+    }
+
+    updateRating(state){
+        if (state){
+            this.rating += 10;
+        }else if (this.rating <= 5){
+            if (this.rating != 0){
+                this.rating = 0;
+            }
+        }else{
+            this.rating -= 5;
+        }
+        
+    }
+
+    getRating(){
+        return this.rating;
+    }
+}
 
 
 class GameServer {
     constructor() {
+        this.accountList = new Map(); // (name, passwd)
         this.players = new Map(); //(sessionID, name, socket);
         this.room = new Map();    //(id, gameMap[], player1, player2);
         this.id = 0;
     }
 
+    registerAccount(name, passwd){
+        if (!this.accountList.has(name)){
+            this.accountList.set(name, new Account(name, passwd));
+            console.log("register", this.accountList);
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    existenceCheckAccount(name, passwd){
+        
+        return this.accountList.has(name) && this.accountList.get(name).checkPasswd(passwd);
+
+    }
+
+    // updateRatingAccount(nameAccount, state){
+    //     // this.accountList.get(nameAccount).updateRating(state);
+    //     console.log("update", this.accountList);
+    //     console.log(this.accountList.get(nameAccount));
+    // }
+
+    // getRatingAccount(nameAccount){
+    //     console.log("get", this.accountList);
+    //     console.log(this.accountList.get(nameAccount));
+    //     return 0;
+    // }
+
     addPlayer(sessionID, name) {
-        this.players.set(sessionID, new OnlinePlayer(sessionID, name));
+        this.players.set(sessionID, new OnlinePlayer(sessionID, name, this.accountList.get(name).getRating()));
     }
 
     disconnect(sessionID){
@@ -178,11 +243,13 @@ class GameServer {
     }
     
 
-    exit(sessionID) {
+    exit(sessionID, state) {
         if (this.room.has(this.players.get(sessionID).room.id)){
             this.room.delete(this.players.get(sessionID).room.id)
         }
-        this.players.get(sessionID).exit();
+        console.log(this.accountList);
+        this.accountList.get(this.getName(sessionID)).updateRating(state);
+        this.players.get(sessionID).exit(this.accountList.get(this.getName(sessionID)).rating);
     }
 
     removeUnactivePlayers() {

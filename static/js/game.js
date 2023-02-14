@@ -4,9 +4,10 @@ function EmptyPage(message){
     '<div id="loading"><div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div>&nbsp;' + message + '</div>';
 }
 
-function Button(player){
+function Button(player, rating){
     document.getElementById('game').innerHTML = '';
     document.getElementById('game').innerHTML += '<h1 >Игрок: ' + player + '</h1>';
+    document.getElementById('game').innerHTML += '<h2 >Рейтинг: ' + rating + '</h2>';
     document.getElementById('game').innerHTML += '<form action="/play" method="post">';
     document.getElementById('game').innerHTML += '<button onclick="playerPlay()" type="button" class="btn btn-primary">Играть</button>';
     document.getElementById('game').innerHTML += '</form>';
@@ -39,25 +40,25 @@ function playerPlay(){
     socket.emit("checkbox", {})
 }
 
-function exitInMainMenu(){
+function exitInMainMenu(state){
     document.getElementById('game').innerHTML = '';
     document.getElementById('myName').innerHTML = '';
     document.getElementById('modal-wrapper').style.display='none';
     document.getElementById('winnerName').innerHTML = '';
     document.getElementById('exitGame').innerHTML = '';
-    socket.emit("exit", {});
+    socket.emit("exit", {userState : state});
 }
 
 function Winner(myName, name){
     if (myName === name){
         document.getElementById('modal-wrapper').style.display='block';
         document.getElementById('winnerName').innerHTML = "<h1><b><font color='blue'>Вы победили!!!</font></b></h1>";
-        document.getElementById('exitGame').innerHTML = '<button onclick="exitInMainMenu()" type="button" class="btn btn-outline-danger">Выход</button>';
+        document.getElementById('exitGame').innerHTML = '<button onclick="exitInMainMenu(true)" type="button" class="btn btn-outline-danger">Выход</button>';
     }else{
         document.getElementById('modal-wrapper').style.display='block';
         document.getElementById('winnerName').innerHTML = "<h1><b id='winner'><font color='Red'>Вы проиграли!!!</font></b></h1>";
         document.getElementById('winnerName').innerHTML += "<div>Победил игрок:<font color='Red'> " + name + "</font>!!!</div>";
-        document.getElementById('exitGame').innerHTML = '<button onclick="exitInMainMenu()" type="button" class="btn btn-outline-danger">Выход</button>';
+        document.getElementById('exitGame').innerHTML = '<button onclick="exitInMainMenu(false)" type="button" class="btn btn-outline-danger">Выход</button>';
     }
 
 }
@@ -111,7 +112,7 @@ socket.on("mapRed", (data) => {
 });
 
 socket.on("Name", (data) => {
-    Button(data.userName);
+    Button(data.userName, data.userRating);
 });
 
 socket.on("gameLaunch", (data) => {
